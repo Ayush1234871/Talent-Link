@@ -1,0 +1,26 @@
+# Created by Antigravity
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+venv/
+ENV/
+.env
+db.sqlite3
+
+# Node
+node_modules/
+dist/
+dist-ssr
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
