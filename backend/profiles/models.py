@@ -11,4 +11,7 @@ class Profile(models.Model):
     hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     availability = models.CharField(max_length=100, blank=True)
     location = models.CharField(max_length=100, blank=True)
+    profile_picture = models.URLField(blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    portfolio_url = models.URLField(blank=True, null=True)
 

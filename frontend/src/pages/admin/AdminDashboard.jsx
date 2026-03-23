@@ -6,7 +6,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorStatus, setErrorStatus] = useState(null);
-  const [view, setView] = useState("overview"); // overview, users, reports
+  const [view, setView] = useState("overview"); // overview, users, financials, platform
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -22,11 +22,7 @@ const AdminDashboard = () => {
         API.get("/verify-users/")
       ]);
       setStats(statsRes.data);
-      console.log("Dashboard Sync Success:", { stats: statsRes.data, usersCount: usersRes.data.length });
       
-      setStats(statsRes.data);
-      
-      // 🛡️ Handle DRF pagination if present
       const userData = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.results || []);
       setUsers(userData);
     } catch (error) {
@@ -64,12 +60,11 @@ const AdminDashboard = () => {
     }
   };
 
-  // 📈 Advanced Chart Components
   const AreaChart = ({ data, width = 600, height = 200 }) => {
     if (!data || data.length === 0) return (
-        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-            No platform income data yet.
-        </div>
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+        No platform income data yet.
+      </div>
     );
     const max = Math.max(...data.map(d => d.amount), 1);
     const points = data.map((d, i) => `${(i / (data.length - 1)) * width},${height - (d.amount / max) * height}`).join(" ");
@@ -94,12 +89,10 @@ const AdminDashboard = () => {
 
   const filteredUsers = Array.isArray(users) ? users.filter(u => {
     const searchLower = searchTerm.toLowerCase();
-    const nameMatch = u.username?.toLowerCase().includes(searchLower);
-    const emailMatch = u.email?.toLowerCase().includes(searchLower);
-    const roleMatch = u.role?.toLowerCase().includes(searchLower);
-    const profileMatch = u.profile?.bio?.toLowerCase().includes(searchLower) || u.profile?.skills?.toLowerCase().includes(searchLower);
-    
-    return nameMatch || emailMatch || roleMatch || profileMatch;
+    const nameMatch = (u.username || "").toLowerCase().includes(searchLower);
+    const emailMatch = (u.email || "").toLowerCase().includes(searchLower);
+    const roleMatch = (u.role || "").toLowerCase().includes(searchLower);
+    return nameMatch || emailMatch || roleMatch;
   }) : [];
 
   if (loading) return (
@@ -111,7 +104,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-layout" style={{ display: 'flex', minHeight: '100vh', background: '#020617', color: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-      {/* 🏰 High-End Sidebar */}
+      {/* Sidebar */}
       <aside style={{ width: '280px', background: '#0b1222', borderRight: '1px solid #1e293b', padding: '30px 20px', position: 'sticky', top: 0, height: '100vh' }}>
         <h2 className="text-gradient" style={{ fontSize: '24px', fontWeight: '800', marginBottom: '40px', textAlign: 'center', letterSpacing: '2px' }}>TALENT LINK</h2>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -130,7 +123,6 @@ const AdminDashboard = () => {
                 background: view === item.id ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
                 color: view === item.id ? '#818cf8' : '#94a3b8',
                 fontWeight: '600', textAlign: 'left',
-                boxShadow: view === item.id ? '0 4px 12px rgba(99, 102, 241, 0.1)' : 'none'
               }}
             >
               <span style={{ fontSize: '18px' }}>{item.icon}</span> {item.label}
@@ -139,36 +131,27 @@ const AdminDashboard = () => {
         </nav>
       </aside>
 
-      {/* 🚀 Main Content Area */}
+      {/* Main Content */}
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '6px' }}>
-              {view === 'overview' ? 'Global Oversight' : view === 'users' ? 'Registered Talent & Clients' : 'Detailed Analysis'}
+              {view === 'overview' ? 'Global Oversight' : view === 'users' ? 'Registered Talent & Clients' : view === 'financials' ? 'Financial Audit' : 'Platform Health'}
             </h1>
             <p style={{ color: '#64748b', fontSize: '14px' }}>Real-time platform synchronization active.</p>
           </div>
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#0f172a', padding: '8px 16px', borderRadius: '30px', border: '1px solid #1e293b' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
-                <span style={{ fontSize: '12px', fontWeight: '600', color: '#10b981' }}>CORE SECURE</span>
-            </div>
-            <button className="primary-btn" style={{ padding: '10px 24px', borderRadius: '12px' }} onClick={fetchData}>Refresh Data</button>
-          </div>
+          <button className="primary-btn" style={{ padding: '10px 24px', borderRadius: '12px' }} onClick={fetchData}>Refresh Data</button>
         </header>
 
         {errorStatus && (
           <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', padding: '15px', borderRadius: '12px', marginBottom: '30px', color: '#f87171' }}>
             <h4 style={{ margin: 0 }}>System Alert: {errorStatus === 403 ? 'Access Denied' : 'Sync Failure'}</h4>
-            <p style={{ fontSize: '13px', margin: '5px 0 0' }}>
-              {errorStatus === 403 ? 'Your session lacks the required administrator clearance. Please logout and login via the Admin Gateway.' : `The command centre could not synchronize with the platform core (Error: ${errorStatus}).`}
-            </p>
           </div>
         )}
 
+        {/* OVERVIEW VIEW */}
         {view === 'overview' && (
-          <div className="dashboard-grid">
-            {/* Stats Overview */}
+          <div className="dashboard-grid" style={{ animation: "fadeIn 0.5s ease" }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', marginBottom: '40px' }}>
               {[
                 { label: 'Platform Revenue', value: `$${(stats?.total_revenue || 0).toLocaleString()}`, change: '+18.4%', color: '#10b981', icon: '📈' },
@@ -186,8 +169,6 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
-
-            {/* Charts Section */}
             <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '32px' }}>
               <div className="glass-panel" style={{ padding: '32px', borderRadius: '28px', border: '1px solid #1e293b' }}>
                 <h3 style={{ marginBottom: '25px', color: '#f8fafc', fontSize: '20px', fontWeight: '700' }}>Income Growth Cycle</h3>
@@ -198,161 +179,163 @@ const AdminDashboard = () => {
               <div className="glass-panel" style={{ padding: '32px', borderRadius: '28px', border: '1px solid #1e293b' }}>
                 <h3 style={{ marginBottom: '25px', fontSize: '20px', fontWeight: '700' }}>Real-time Events</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  {stats?.recent_events?.length > 0 ? stats.recent_events.map((event, i) => (
+                  {stats?.recent_events?.map((event, i) => (
                     <div key={i} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366f1', marginTop: '6px', boxShadow: '0 0 8px rgba(99, 102, 241, 0.5)' }}></div>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366f1', marginTop: '6px' }}></div>
                       <div>
                         <p style={{ fontSize: '14px', fontWeight: '700', color: '#e2e8f0' }}>{event.title}</p>
-                        <p style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{event.description} • {event.time}</p>
+                        <p style={{ fontSize: '12px', color: '#64748b' }}>{event.description} • {event.time}</p>
                       </div>
                     </div>
-                  )) : <p style={{ color: '#64748b', textAlign: 'center', marginTop: '40px' }}>No recent events logged.</p>}
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         )}
 
+        {/* USERS VIEW */}
         {view === 'users' && (
-          <div className="glass-panel" style={{ padding: '32px', borderRadius: '28px', border: '1px solid #1e293b' }}>
+          <div className="glass-panel" style={{ padding: '32px', borderRadius: '28px', border: '1px solid #1e293b', animation: "fadeIn 0.5s ease" }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', alignItems: 'center' }}>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  type="text" 
-                  placeholder="Master search: users, roles, verify status..." 
-                  className="glass-input"
-                  style={{ width: '450px', padding: '14px 20px 14px 45px', fontSize: '14px' }}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <span style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+              <input 
+                type="text" 
+                placeholder="Search users..." 
+                className="glass-input"
+                style={{ width: '450px', padding: '14px 20px' }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <table className="admin-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px' }}>
+                  <th style={{ padding: '0 20px' }}>User</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right', paddingRight: '20px' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map(user => (
+                  <tr key={user.id} style={{ background: 'rgba(30, 41, 59, 0.2)' }}>
+                    <td style={{ padding: '20px', borderRadius: '16px 0 0 16px' }}>{user.username}</td>
+                    <td>{user.role}</td>
+                    <td>{new Date(user.date_joined).toLocaleDateString()}</td>
+                    <td>{user.is_active ? '✅ Active' : '🔒 Locked'}</td>
+                    <td style={{ textAlign: 'right', paddingRight: '20px', borderRadius: '0 16px 16px 0' }}>
+                      <button className="glass-btn small" onClick={() => toggleUserActive(user.id)}>
+                        {user.is_active ? 'Restrict' : 'Unseal'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* FINANCIALS VIEW */}
+        {view === 'financials' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', animation: "fadeIn 0.5s ease" }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+              <div className="glass-panel" style={{ padding: '32px', border: '1px solid #1e293b' }}>
+                <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>Total Platform Revenue</p>
+                <h2 style={{ fontSize: '48px', fontWeight: '900', color: '#10b981' }}>${stats?.financial_stats?.total_revenue?.toLocaleString()}</h2>
+                <div style={{ marginTop: '20px', padding: '15px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                  <p style={{ fontSize: '14px', color: '#10b981' }}>Est. Platform Fee (10%): <strong>${(stats?.financial_stats?.total_revenue * 0.1).toLocaleString()}</strong></p>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button className="glass-btn">Export Directory</button>
-                <button className="glass-btn primary" style={{ background: '#6366f1', color: 'white', borderColor: 'transparent' }}>Audit Review</button>
+              <div className="glass-panel" style={{ padding: '32px', border: '1px solid #1e293b' }}>
+                <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>Financial Breakdown</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>Avg. Project Value</span>
+                    <span style={{ fontWeight: '700' }}>${stats?.financial_stats?.avg_transaction_value?.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>Panding Payouts</span>
+                    <span style={{ fontWeight: '700' }}>${stats?.financial_stats?.pending_payments?.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b' }}>Processed Payouts</span>
+                    <span style={{ fontWeight: '700' }}>${stats?.financial_stats?.payouts_processed?.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="glass-panel" style={{ padding: '32px', border: '1px solid #1e293b' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px' }}>Revenue Distribution</h3>
+              <div style={{ height: '300px' }}>
+                 <AreaChart data={stats?.income_data} height={300} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SYSTEM HEALTH VIEW */}
+        {view === 'platform' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '32px', animation: "fadeIn 0.5s ease" }}>
+            <div className="glass-panel" style={{ padding: '32px', border: '1px solid #1e293b' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px' }}>Core Status</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>API Server</span>
+                  <span style={{ padding: '6px 12px', borderRadius: '30px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '12px', fontWeight: '800' }}>{stats?.system_health?.api_status}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>Database Cluster</span>
+                  <span style={{ padding: '6px 12px', borderRadius: '30px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '12px', fontWeight: '800' }}>{stats?.system_health?.database}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94a3b8' }}>Load Balancer</span>
+                  <span style={{ padding: '6px 12px', borderRadius: '30px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '12px', fontWeight: '800' }}>ONLINE</span>
+                </div>
+              </div>
+              <div style={{ marginTop: '32px', padding: '20px', borderRadius: '16px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
+                <p style={{ fontSize: '13px', color: '#818cf8', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>System Uptime</span>
+                  <strong>{stats?.system_health?.uptime}</strong>
+                </p>
               </div>
             </div>
 
-            <div style={{ overflowX: 'auto' }}>
-              <table className="admin-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    <th style={{ padding: '0 20px' }}>User Identity</th>
-                    <th>Role & Profile</th>
-                    <th>Engagement</th>
-                    <th>Security</th>
-                    <th style={{ textAlign: 'right', paddingRight: '20px' }}>Governance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.length > 0 ? filteredUsers.map(user => (
-                    <tr key={user.id} style={{ background: 'rgba(30, 41, 59, 0.2)', transition: '0.2s', borderRadius: '16px' }}>
-                      <td style={{ padding: '20px', borderRadius: '16px 0 0 16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                          <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', color: '#6366f1', border: '1px solid #1e293b' }}>
-                            {user.username[0].toUpperCase()}
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: '700', fontSize: '15px' }}>{user.username} {user.is_flagged && <span style={{ color: '#ef4444' }}>🚩</span>}</p>
-                            <p style={{ fontSize: '12px', color: '#64748b' }}>{user.email || 'No email registered'}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span className={`role-badge ${user.role}`}>{user.role}</span>
-                            {user.profile?.bio && <span style={{ fontSize: '11px', color: '#94a3b8', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.profile.bio}</span>}
-                        </div>
-                      </td>
-                      <td style={{ color: '#94a3b8', fontSize: '13px', fontWeight: '500' }}>
-                        <p>{new Date(user.date_joined).toLocaleDateString()}</p>
-                        {user.profile?.hourly_rate && <p style={{ fontSize: '11px', color: '#10b981' }}>${user.profile.hourly_rate}/hr</p>}
-                      </td>
-                      <td>
-                        <span style={{ fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '8px', background: user.is_active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: user.is_active ? '#10b981' : '#ef4444', textTransform: 'uppercase' }}>
-                          {user.is_active ? 'Active' : 'Locked'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right', paddingRight: '20px', borderRadius: '0 16px 16px 0' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                          <button 
-                            className="glass-btn small" 
-                            onClick={() => toggleUserVerification(user.id, user.is_verified)}
-                            style={{ borderColor: user.is_verified ? '#10b981' : '#6366f1', color: user.is_verified ? '#10b981' : '#6366f1' }}
-                          >
-                            {user.is_verified ? 'Verified' : 'Verify'}
-                          </button>
-                          <button 
-                            className="glass-btn small danger" 
-                            onClick={() => toggleUserActive(user.id)}
-                            style={{ borderColor: user.is_active ? '#ef4444' : '#10b981', color: user.is_active ? '#ef4444' : '#10b981' }}
-                          >
-                            {user.is_active ? 'Restrict' : 'Unseal'}
-                          </button>
-                          <button 
-                             className="glass-btn small"
-                             onClick={() => toggleUserFlag(user.id)}
-                             style={{ background: user.is_flagged ? '#ef4444' : 'transparent', color: user.is_flagged ? 'white' : '#94a3b8' }}
-                          >
-                            Flag
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )) : <tr><td colSpan="5" style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>No users match the control criteria.</td></tr>}
-                </tbody>
-              </table>
+            <div className="glass-panel" style={{ padding: '32px', border: '1px solid #1e293b' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px' }}>Performance Metrics</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>API Latency</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700' }}>{stats?.system_health?.latency}</span>
+                  </div>
+                  <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px' }}>
+                    <div style={{ width: '42%', height: '100%', background: '#6366f1', borderRadius: '3px' }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '14px', color: '#94a3b8' }}>Active Sessions (24h)</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700' }}>{stats?.system_health?.active_sessions}</span>
+                  </div>
+                  <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px' }}>
+                    <div style={{ width: '65%', height: '100%', background: '#a855f7', borderRadius: '3px' }}></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </main>
 
       <style>{`
-        .role-badge {
-          padding: 4px 10px;
-          border-radius: 6px;
-          font-size: 10px;
-          font-weight: 800;
-          text-transform: uppercase;
-          display: inline-block;
-          width: fit-content;
-        }
-        .role-badge.client { background: rgba(99, 102, 241, 0.1); color: #818cf8; }
-        .role-badge.freelancer { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .role-badge.admin { background: rgba(236, 72, 153, 0.1); color: #f472b6; }
-        
-        .glass-btn {
-          background: rgba(30, 41, 59, 0.5);
-          border: 1px solid #1e293b;
-          color: #94a3b8;
-          padding: 10px 18px;
-          border-radius: 10px;
-          cursor: pointer;
-          font-size: 13px;
-          transition: 0.2s;
-          font-weight: 600;
-        }
-        .glass-btn:hover { background: #1e293b; color: #f8fafc; transform: translateY(-1px); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .text-gradient { background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); }
+        .glass-input { background: #0b1222; border: 1px solid #1e293b; color: #f8fafc; border-radius: 14px; outline: none; }
+        .glass-btn { background: rgba(30, 41, 59, 0.5); border: 1px solid #1e293b; color: #94a3b8; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
         .glass-btn.small { padding: 6px 14px; font-size: 11px; }
-        .glass-btn.danger:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; color: #ef4444; }
-        
-        .glass-input {
-          background: #0b1222;
-          border: 1px solid #1e293b;
-          color: #f8fafc;
-          border-radius: 14px;
-          outline: none;
-          transition: 0.2s;
-        }
-        .glass-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
-        
-        .text-gradient {
-          background: linear-gradient(to right, #6366f1, #a855f7);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        
-        button:active { transform: scale(0.96); }
       `}</style>
     </div>
   );
