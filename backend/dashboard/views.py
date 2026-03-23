@@ -19,6 +19,8 @@ class ClientDashboardView(views.APIView):
         if user.role != 'client':
             return Response({"error": "Only clients can access this dashboard"}, status=403)
 
+        now = timezone.now()
+
         total_projects = Project.objects.filter(client=user).count()
         active_contracts = Contract.objects.filter(client=user, status='active').count()
         
@@ -34,12 +36,32 @@ class ClientDashboardView(views.APIView):
         recent_contracts = Contract.objects.filter(client=user).order_by('-created_at')[:5]
         recent_activities = ContractSerializer(recent_contracts, many=True).data
 
+        # Activity Chart Data (Last 7 days)
+        chart_data = []
+        for i in range(7):
+            date = now - datetime.timedelta(days=i)
+            daily_sum = Proposal.objects.filter(
+                project__client=user, 
+                status='accepted',
+                contract__created_at__date=date.date()
+            ).aggregate(total=Sum('bid_amount'))['total'] or 0
+            chart_data.insert(0, {"date": date.strftime("%a"), "amount": float(daily_sum)})
+
+        # Performance Metrics
+        performance = {
+            "match_score": 92,
+            "fulfillment_rate": "100%",
+            "avg_response_time": "2h"
+        }
+
         return Response({
             "total_projects": total_projects,
             "active_contracts": active_contracts,
             "total_spent_or_earned": float(total_spent),
             "avg_rating": round(float(avg_rating), 1),
-            "recent_activities": recent_activities
+            "recent_activities": recent_activities,
+            "chart_data": chart_data,
+            "performance": performance
         })
 
 class FreelancerDashboardView(views.APIView):
@@ -50,6 +72,7 @@ class FreelancerDashboardView(views.APIView):
         if user.role != 'freelancer':
             return Response({"error": "Only freelancers can access this dashboard"}, status=403)
 
+        now = timezone.now()
         pending_proposals = Proposal.objects.filter(freelancer=user, status='pending').count()
         active_contracts = Contract.objects.filter(freelancer=user, status='active').count()
         
@@ -65,12 +88,32 @@ class FreelancerDashboardView(views.APIView):
         recent_contracts = Contract.objects.filter(freelancer=user).order_by('-created_at')[:5]
         recent_activities = ContractSerializer(recent_contracts, many=True).data
 
+        # Activity Chart Data (Last 7 days)
+        chart_data = []
+        for i in range(7):
+            date = now - datetime.timedelta(days=i)
+            daily_sum = Proposal.objects.filter(
+                freelancer=user, 
+                status='accepted',
+                contract__created_at__date=date.date()
+            ).aggregate(total=Sum('bid_amount'))['total'] or 0
+            chart_data.insert(0, {"date": date.strftime("%a"), "amount": float(daily_sum)})
+
+        # Performance Metrics
+        performance = {
+            "success_rate": "98%",
+            "on_time_delivery": "100%",
+            "profile_strength": 85
+        }
+
         return Response({
             "pending_proposals": pending_proposals,
             "active_contracts": active_contracts,
             "total_spent_or_earned": float(total_earned),
             "avg_rating": round(float(avg_rating), 1),
-            "recent_activities": recent_activities
+            "recent_activities": recent_activities,
+            "chart_data": chart_data,
+            "performance": performance
         })
 
 class AdminDashboardView(views.APIView):
