@@ -46,6 +46,15 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         data = super().validate(attrs)
         
+        # 🎭 Role Validation (Requested by User)
+        requested_role = self.initial_data.get('role')
+        if requested_role and requested_role in ['client', 'freelancer']:
+            if self.user.role != requested_role:
+                from rest_framework import serializers
+                raise serializers.ValidationError({
+                    "detail": f"Account role mismatch. This account is registered as a {self.user.role}. Please sign in with the correct role selected."
+                })
+
         # 🛡️ Ensure Superusers are treated as Admins in token and session
         if self.user.is_superuser:
             self.user.role = 'admin'

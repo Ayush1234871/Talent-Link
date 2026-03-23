@@ -5,6 +5,7 @@ import { loginUser } from "../services/authService";
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("client");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,10 +16,10 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await loginUser({ username, password });
+      const response = await loginUser({ username, password, role });
       localStorage.setItem("access", response.data.access);
       localStorage.setItem("refresh", response.data.refresh);
-      localStorage.setItem("role", response.data.role || "client");
+      localStorage.setItem("role", response.data.role);
       localStorage.setItem("user_id", response.data.user_id);
       navigate("/dashboard");
     } catch (error) {
@@ -42,6 +43,21 @@ function Login() {
         )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="role-selector">
+            <div
+              className={`role-option ${role === "client" ? "active" : ""}`}
+              onClick={() => setRole("client")}
+            >
+              Hire Talent
+            </div>
+            <div
+              className={`role-option ${role === "freelancer" ? "active" : ""}`}
+              onClick={() => setRole("freelancer")}
+            >
+              Find Work
+            </div>
+          </div>
+
           <div className="input-group">
             <label>Username</label>
             <div className="input-container">
