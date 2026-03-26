@@ -46,8 +46,27 @@ function Register() {
       navigate("/login");
     } catch (error) {
       console.error("Register failed:", error);
-      const serverMsg = error.response?.data?.username?.[0] || error.response?.data?.detail;
-      setError(serverMsg || "Registration failed. Username may already be taken or server is offline.");
+      
+      let errorMsg = "Registration failed. Please try again.";
+      
+      if (!error.response) {
+        // Network error (server is offline or unreachable)
+        errorMsg = "Server is unreachable. Please check if the backend is running.";
+      } else if (error.status === 400 || error.response?.status === 400) {
+        // Specific validation errors from backend
+        const data = error.response?.data;
+        if (data?.username) {
+          errorMsg = data.username[0];
+        } else if (data?.detail) {
+          errorMsg = data.detail;
+        } else {
+          errorMsg = "Invalid details provided. Please check your username and password.";
+        }
+      } else if (error.response) {
+        errorMsg = `Server error (${error.response.status}). Please try again later.`;
+      }
+      
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
