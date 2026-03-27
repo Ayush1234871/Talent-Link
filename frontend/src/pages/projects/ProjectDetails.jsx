@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "../../services/api";
+import { useToast } from "../../context/ToastContext";
 
 function ProjectDetails() {
     const { id } = useParams();
     const role = localStorage.getItem("role") || "freelancer";
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     const [project, setProject] = useState(null);
     const [proposals, setProposals] = useState([]);
@@ -40,11 +42,11 @@ function ProjectDetails() {
                 project: id,
                 ...proposalDetails
             });
-            alert("Proposal submitted successfully!");
+            showToast("Proposal submitted successfully!");
             setProposalDetails({ bid_amount: "", duration: "", cover_letter: "" });
         } catch (err) {
             console.error("Error submitting proposal:", err);
-            alert("Failed to submit proposal. Make sure you are a freelancer.");
+            showToast("Failed to submit proposal. Make sure you are a freelancer.", "error");
         } finally {
             setSubmitting(false);
         }
@@ -56,11 +58,11 @@ function ProjectDetails() {
 
             try {
                 const res = await API.post(`/proposals/${proposalId}/accept/`);
-                alert(res.data.message);
+                showToast(res.data.message || "Proposal accepted!");
                 navigate("/contracts");
             } catch (err) {
                 console.error("Error accepting proposal:", err);
-                alert("Failed to accept proposal.");
+                showToast("Failed to accept proposal.", "error");
             }
         } else {
             if (!window.confirm("Are you sure you want to reject this proposal?")) return;

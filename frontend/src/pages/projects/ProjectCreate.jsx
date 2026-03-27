@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../services/api";
+import { useToast } from "../../context/ToastContext";
 
 function ProjectCreate() {
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [project, setProject] = useState({
         title: "",
         description: "",
@@ -26,7 +28,7 @@ function ProjectCreate() {
         setLoading(true);
         try {
             await API.post("/projects/", project);
-            alert("Project posted successfully!");
+            showToast("Project posted successfully!");
             navigate("/projects");
         } catch (err) {
             console.error("Error creating project:", err);

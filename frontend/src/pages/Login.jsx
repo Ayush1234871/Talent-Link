@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
+import { useToast } from "../context/ToastContext";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -9,6 +10,7 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +23,7 @@ function Login() {
       localStorage.setItem("refresh", response.data.refresh);
       localStorage.setItem("role", response.data.role);
       localStorage.setItem("user_id", response.data.user_id);
+      showToast("Signed in successfully!");
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import API from "../../services/api";
+import { useToast } from "../../context/ToastContext";
 
 const AdminDashboard = () => {
+  const { showToast } = useToast();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,7 @@ const AdminDashboard = () => {
       await API.post(`/verify-users/${id}/toggle_active/`);
       fetchData();
     } catch (error) {
-      alert("Failed to update user status");
+      showToast("Failed to update user status", "error");
     }
   };
 
@@ -47,7 +49,7 @@ const AdminDashboard = () => {
       await API.patch(`/verify-users/${id}/`, { is_verified: !status });
       fetchData();
     } catch (error) {
-      alert("Verification update failed");
+      showToast("Verification update failed", "error");
     }
   };
 
@@ -56,7 +58,7 @@ const AdminDashboard = () => {
       await API.post(`/verify-users/${id}/toggle_flag/`);
       fetchData();
     } catch (error) {
-      alert("Flag update failed");
+      showToast("Flag update failed", "error");
     }
   };
 

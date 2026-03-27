@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../services/authService";
+import { useToast } from "../context/ToastContext";
 
 function Register() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -42,7 +44,7 @@ function Register() {
         password: formData.password,
         role: formData.role.toLowerCase()
       });
-      alert("Registration successful! You can now log in.");
+      showToast("Registration successful! You can now log in.");
       navigate("/login");
     } catch (error) {
       console.error("Register failed:", error);

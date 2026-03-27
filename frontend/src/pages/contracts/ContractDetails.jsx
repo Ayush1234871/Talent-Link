@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../../services/api";
+import { useToast } from "../../context/ToastContext";
 
 function ContractDetails() {
     const { id } = useParams();
     const role = localStorage.getItem("role") || "freelancer";
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     const [contract, setContract] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -61,7 +63,7 @@ function ContractDetails() {
             try {
                 await API.patch(`/contracts/${id}/update_status/`, { status: "completed" });
                 setContract({ ...contract, status: "completed" });
-                alert("Contract marked as Completed!");
+                showToast("Contract marked as Completed!");
             } catch (err) {
                 console.error("Error updating status:", err);
             }
@@ -76,11 +78,11 @@ function ContractDetails() {
                 rating: review.rating,
                 comment: review.comment
             });
-            alert("Review submitted successfully!");
+            showToast("Review submitted successfully!");
             navigate("/contracts");
         } catch (err) {
             console.error("Error submitting review:", err);
-            alert("Failed to submit review. You can only review once.");
+            showToast("Failed to submit review. You can only review once.", "error");
         }
     };
 

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import API from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 function Profile() {
+  const { showToast } = useToast();
   const [profileData, setProfileData] = useState({
     email: "",
     first_name: "",
@@ -82,9 +84,10 @@ function Profile() {
       await API.put("/profiles/me/", profileData);
       setIsEditing(false);
       setErrors({});
+      showToast("Profile updated successfully!");
     } catch (err) {
       console.error("Error updating profile:", err);
-      alert("Failed to update profile. Please try again.");
+      showToast("Failed to update profile. Please try again.", "error");
     } finally {
       setSaving(false);
     }
